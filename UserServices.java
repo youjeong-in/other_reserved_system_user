@@ -30,13 +30,19 @@ public class UserServices {
 		RestaurantInfo ri = new RestaurantInfo();
 		ri.setWord(req.getParameter("word"));
 		DataAccessObject dao = new DataAccessObject();
-		dao.dbOpen(0);
-		
-		//if(this.getSearchResult(dao, ri)!=null) { //검색하신 결과가 NULL이 아니라면
-		ab.setUserId((String)req.getSession().getAttribute("userId"));
-		req.setAttribute("list", this.makeHtml(this.getSearchResult(dao, ri)));
-		req.setAttribute("user", ab.getUserId());
-		
+		dao.dbOpen(6);
+
+		if(this.getSearchResult(dao, ri).isEmpty()) { //검색하신 결과가 NULL이 아니라면
+			ab.setUserId((String)req.getSession().getAttribute("userId"));
+			req.setAttribute("user", ab.getUserId());
+			message = "ㅠㅠ검색하신 결과가 없습니다.ㅠㅠ";
+			req.setAttribute("nullmessage", message);
+			
+		}else {
+			ab.setUserId((String)req.getSession().getAttribute("userId"));
+			req.setAttribute("list", this.makeHtml(this.getSearchResult(dao, ri)));
+			req.setAttribute("user", ab.getUserId());
+		}
 		dao.dbClose();
 		action.setPage("cMain.jsp");
 		action.setRedirect(false);
@@ -50,7 +56,7 @@ public class UserServices {
 	//비교검색 html
 	private String makeHtml(ArrayList<RestaurantInfo> list) {
 		StringBuffer sb = new StringBuffer();
-		
+
 		for(RestaurantInfo ri : list) {
 			//System.out.println(ri.getMenu());
 			sb.append("<div onClick=\'dayList(" + ri.getReCode()+")\'>-----------------------------------------");
@@ -75,14 +81,14 @@ public class UserServices {
 			ri.setReCode(req.getParameter("reCode"));
 
 			DataAccessObject dao = new DataAccessObject();
-			dao.dbOpen(0);
+			dao.dbOpen(6);
 
 			sevenDays = this.getDays();
 
 			this.compareDate(sevenDays, this.getreservedDate(dao, ri));
 
 			dao.dbClose();
-			
+
 			req.setAttribute("dayList", this.makeHtmlDayList(sevenDays,ri.getReCode()));
 			action.setPage("cProcess1.jsp");
 			action.setRedirect(false);
@@ -93,14 +99,14 @@ public class UserServices {
 
 	private String makeHtmlDayList(ArrayList<String> sevenDays, String reCode) {
 		StringBuffer sb = new StringBuffer();
-		
+
 		sb.append("<div id=\"dayList\">");
 		sb.append("<div class=\"step\">DayList</div>");
 		for(String day : sevenDays) {
 			sb.append("<div class=\"data\" onMouseOver=\"trOver('', this)\" onMouseOut=\"trOut(this)\"onClick = \"menuList(\'"+ reCode + "\' , \'" + day + "\')\">" + day + "</div>");
 		}
 		sb.append("</div>");
-		
+
 		return sb.toString();
 	}
 
@@ -136,52 +142,54 @@ public class UserServices {
 			}
 		}
 	}
+
+
 	//특정가게의 메뉴리스트 
 	public String menuListCtl() {
 		String menuList=null;
 		RestaurantInfo ri = new RestaurantInfo();
 		ri.setReCode(req.getParameter("reCode"));
 		ri.setrDate(req.getParameter("day"));
-		
+
 		DataAccessObject dao = new DataAccessObject();
-		dao.dbOpen(0);
+		dao.dbOpen(6);
 		menuList =this.getMenu(dao, ri);
-		
+
 		dao.dbClose();
-		
+
 		return menuList;
 	}
-	
+
 	private String getMenu(DataAccessObject dao,RestaurantInfo ri) {
 		String menuList=null;
 		Gson gson = new Gson();
 		menuList = gson.toJson(dao.getMenu(ri));
-		
+
 		return menuList;
 	}
-	
+
 	public Action reserveCtl() {
 		Action action = new Action();
 		ArrayList<RestaurantInfo> reserve = new ArrayList<RestaurantInfo>();
 		String message =null;
 		HttpSession session =req.getSession() ;
-		
+
 		//System.out.println(req.getParameter("data"));
 		//데이터 넣기 (recode, mlcode, quantity, userId,date)
 		Gson gson = new Gson();
 		reserve = gson.fromJson(req.getParameter("data"), new TypeToken<ArrayList<RestaurantInfo>>(){}.getType());
-		
+
 		//메뉴가 여러개일수있기때문에 메뉴가 담긴 것들을 반복문으로 돌려서 넣어야한다.
 		for(RestaurantInfo ri : reserve) {
 			ri.setUserId((String)session.getAttribute("userId"));
-//			System.out.println(ri.getReCode());
-//			System.out.println(ri.getMlCode());
-//			System.out.println(ri.getQuantity());
-//			System.out.println(ri.getrDate());
-//			System.out.println(ri.getUserId());
+			//			System.out.println(ri.getReCode());
+			//			System.out.println(ri.getMlCode());
+			//			System.out.println(ri.getQuantity());
+			//			System.out.println(ri.getrDate());
+			//			System.out.println(ri.getUserId());
 		}
 		DataAccessObject dao = new DataAccessObject();
-		dao.dbOpen(0); dao.setTranConf(false);//자동커밋 풀었음
+		dao.dbOpen(6); dao.setTranConf(false);//자동커밋 풀었음
 		if(this.insBookingList(reserve.get(0), dao)) {
 			if(this.insBookingDetail(reserve, dao)) {
 				dao.setTran(true);
@@ -195,13 +203,13 @@ public class UserServices {
 		}
 		action.setPage("myPage");
 		action.setRedirect(false);
-			
+
 		dao.setTranConf(true); dao.dbClose();
 		return action;
 	}
 	//필요한 데이터 : reCode, userId, rDate, state
 	private boolean insBookingList(RestaurantInfo ri, DataAccessObject dao) {
-		
+
 		return this.convertData(dao.insBookingList(ri));
 	}
 	//필요한 데이터 : reCode, userId, rDate, mlCode, quantity
@@ -214,45 +222,45 @@ public class UserServices {
 		}
 		return result;
 	}
-	
+
 	private boolean convertData (int data) {
 		return (data>0)? true :false;
 	}
 
 	public Action myPageCtl() {
 		Action action = new Action();
-		
+
 		HttpSession session = req.getSession();
 		RestaurantInfo ri = new RestaurantInfo();
-		
+
 		ri.setUserId((String)session.getAttribute("userId"));
-		
+
 		DataAccessObject dao = new DataAccessObject();
-		dao.dbOpen(0);
-		
-		
+		dao.dbOpen(6);
+
+
 		req.setAttribute("bookingList", this.makeHtmlBookList(this.getBookList(dao, ri)));
-		
+
 		Gson gson = new Gson();
 		req.setAttribute("MenuInfo", 
 				gson.toJson(this.getBookDetail(dao, ri)));
-		
+
 		//req.setAttribute("bookingDetail", this.makeHtmlBookDetail(this.getBookDetail(dao, ri)));
 		dao.dbClose();
 		action.setPage("myPage.jsp");
 		action.setRedirect(false);
-		
+
 		return action;
 	}
-	
+
 	private ArrayList<RestaurantInfo> getBookList(DataAccessObject dao,RestaurantInfo ri) {
-		
+
 		return dao.getBookList(ri);
 	}
-	
+
 	private String makeHtmlBookList(ArrayList<RestaurantInfo> list) {
 		StringBuffer sb = new StringBuffer();
-		
+
 		sb.append("<table>");
 		sb.append("<tr><th>레스토랑</th><th>날짜</th><th>상태</th><th>위치</th></tr>");
 		for(RestaurantInfo ri : list) {
@@ -264,18 +272,18 @@ public class UserServices {
 			sb.append("</tr>");
 		}
 		sb.append("</table>");
-		
+
 		return sb.toString();
 	}
 
 	private ArrayList<RestaurantInfo> getBookDetail(DataAccessObject dao, RestaurantInfo ri) {
-	
+
 		return dao.getBookDetail(ri);
 	}
-	
+
 	private String makeHtmlBookDetail(ArrayList<RestaurantInfo> list) {
 		StringBuffer sb = new StringBuffer();
-		
+
 		sb.append("<table>");
 		sb.append("<tr><th>레스토랑</th><th>날짜</th><th>메뉴</th><th>가격</th><th>갯수</th><th>총금액</th></tr>");
 		for(RestaurantInfo ri : list) {
@@ -289,7 +297,7 @@ public class UserServices {
 			sb.append("</tr>");
 		}
 		sb.append("</table>");
-		
+
 		return sb.toString();
 	}
 

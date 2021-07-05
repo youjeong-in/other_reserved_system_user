@@ -8,7 +8,7 @@
 <script src="js/js.js"></script>
 <link href="css/style.css" type="text/css" rel="stylesheet" />
 </head>
-<body onLoad = "callmsg('${message}')">
+<body>
 	<div>${user}님의 페이지</div>
 	<div id="searchzone">
 		<input type="text" class="searchbox" name="word" placeholder="어떤메뉴 또는 가게를 찾으시나요?"/>
@@ -17,6 +17,7 @@
 	</div>
 	<div id="searchresult">
 		${list }
+		${nullmessage }
 	</div>
 	<input type = "button" class ="mypagebtn" value="마이페이지" onClick="myPage()"/>
 </body>

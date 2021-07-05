@@ -446,17 +446,18 @@ function orders(textinfo){
 		//input.id = "quantity";
 		//input.type = "number";
 		//input.value = "1";
-		let input = makeInput("number", "quantity",1);
+		let input = makeInput("number", "quantity",1); //type name value
 		input.min = "1";
 		input.max = "10";
 		
-		let count = parseInt(input.valueAsNumber);
+		
+		let count = parseInt(input.value);
 		let menu1 = parseInt(info[3]);
 		console.log(typeof count);
 		console.log(typeof menu1);
 		console.log(count);
 		console.log(menu1);
-		console.log(input.value);
+		console.log(input.list);
 		let sum = Number(menu1*count);
 		
 		console.log(typeof sum);
@@ -494,7 +495,7 @@ function callData(){
 	}
 	let jsonData = JSON.stringify(json);
 	
-	alert(jsonData);
+	//alert(jsonData);
 	let form = document.createElement("form");
 	form.setAttribute("method", "post");
 	form.setAttribute("action", "Orders");
@@ -506,12 +507,12 @@ function callData(){
 	form.submit();
 }
 
-function callmsg(message){
-	if(message!=""){
-		alert(message);
-	}
-}
-function message(msg){
+//function callmsg(nullmessage){//검색결과 없을때 alert로 띄워주는 경우의 function
+//	if(nullmessage!=""){
+//		alert(nullmessage);
+//	}
+//}
+function message(msg){ 
 	
 	if(msg!=""){
 		alert(msg);
@@ -529,6 +530,7 @@ function myPage(){
 	form.submit();
 }
 
+//cmain으로 돌아가기
 function backmove(){
 	let form = document.createElement("form");
 	
